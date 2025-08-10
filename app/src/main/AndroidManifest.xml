@@ -20,9 +20,6 @@
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true">
     <activity
-    android:name=".reader.PdfReaderActivity"
-    android:exported="false">
-    <activity
       android:name=".main.KiwixMainActivity"
       android:configChanges="orientation|keyboardHidden|screenSize"
       android:exported="true"
@@ -163,5 +160,7 @@
     <service
       android:name=".webserver.wifi_hotspot.HotspotService"
       android:foregroundServiceType="dataSync" />
+      <activity android:name=".reader.PdfReaderActivity" android:exported="false" />
+
   </application>
 </manifest>
