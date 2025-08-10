@@ -19,7 +19,9 @@
     android:icon="@mipmap/ic_launcher"
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true">
-
+    <activity
+    android:name=".reader.PdfReaderActivity"
+    android:exported="false">
     <activity
       android:name=".main.KiwixMainActivity"
       android:configChanges="orientation|keyboardHidden|screenSize"
