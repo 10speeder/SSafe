@@ -47,6 +47,10 @@ android {
                 "META-INF/LGPL2.1"
             )
         }
+        jniLibs {
+            // resolve duplicate libc++_shared from libkiwix & pdfium-android
+            pickFirsts += setOf("**/libc++_shared.so")
+        }
     }
   lint {
     checkDependencies = true
