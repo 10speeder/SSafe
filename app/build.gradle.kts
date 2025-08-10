@@ -151,7 +151,7 @@ dependencies {
 implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3")
 
 // EPUB (BSD-3, easy path)
-implementation("com.github.FolioReader:FolioReader-Android:0.5.4")
+implementation("com.folioreader:folioreader:0.1.1")
 
 
 }
