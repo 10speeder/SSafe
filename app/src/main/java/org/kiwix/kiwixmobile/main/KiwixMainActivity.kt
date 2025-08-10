@@ -193,6 +193,7 @@ class KiwixMainActivity : CoreMainActivity() {
     intent?.let {
       pendingIntentFlow.value = it
     }
+    
   }
 
   private fun handleAllIntents(newIntent: Intent?) {
@@ -245,6 +246,12 @@ class KiwixMainActivity : CoreMainActivity() {
     leftDrawerMenu.clear()
     leftDrawerMenu.addAll(leftNavigationDrawerMenuItems)
   }
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    val handled = super.onCreateOptionsMenu(menu)
+    menuInflater.inflate(R.menu.menu_ssafe_open_document, menu)
+    return true
+}
+
 
   override fun onStart() {
     super.onStart()
