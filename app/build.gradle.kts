@@ -136,6 +136,14 @@ dependencies {
   androidTestImplementation(Libs.leakcanary_android_instrumentation)
   testImplementation(Libs.kotlinx_coroutines_test)
   testImplementation(Libs.TURBINE_FLOW_TEST)
+// EPUB via Readium (BSD-3-Clause)
+implementation("org.readium.kotlin-toolkit:readium-shared:3.1.1")
+implementation("org.readium.kotlin-toolkit:readium-streamer:3.1.1")
+implementation("org.readium.kotlin-toolkit:readium-navigator:3.1.1")
+
+// PDF via AndroidPdfViewer (Apache-2.0)
+implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3")
+
 }
 tasks.register("generateVersionCodeAndName") {
   val file = File("VERSION_INFO")
