@@ -60,8 +60,6 @@ android {
       // install alongside official Kiwix
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      // make the launcher name obvious
-      resValue("string", "app_name", "Kiwix (Dev)")
     }
 
     getByName("release") {
