@@ -146,11 +146,7 @@ dependencies {
   testImplementation(Libs.kotlinx_coroutines_test)
   testImplementation(Libs.TURBINE_FLOW_TEST)
 // PDF (Apache-2.0)
-implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3")
-
-// EPUB (BSD-3, easy path)
-implementation("com.folioreader:folioreader:0.1.1")
-
+  implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3")
 
 }
 tasks.register("generateVersionCodeAndName") {
