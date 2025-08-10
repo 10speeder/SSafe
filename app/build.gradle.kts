@@ -37,6 +37,17 @@ android {
     manifestPlaceholders["permission"] = "android.permission.MANAGE_EXTERNAL_STORAGE"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
+                "META-INF/DEPENDENCIES",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1"
+            )
+        }
+    }
   lint {
     checkDependencies = true
   }
