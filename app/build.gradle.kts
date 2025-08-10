@@ -46,6 +46,11 @@ android {
       multiDexKeepProguard = file("multidex-instrumentation-config.pro")
       buildConfigField("boolean", "KIWIX_ERROR_ACTIVITY", "false")
       buildConfigField("boolean", "IS_PLAYSTORE", "false")
+      // install alongside official Kiwix
+      applicationIdSuffix = ".dev"
+      versionNameSuffix = "-dev"
+      // make the launcher name obvious
+      resValue("string", "app_name", "Kiwix (Dev)")
     }
 
     getByName("release") {
