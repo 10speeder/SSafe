@@ -251,6 +251,15 @@ class KiwixMainActivity : CoreMainActivity() {
     menuInflater.inflate(R.menu.menu_ssafe_open_document, menu)
     return true
 }
+override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+        R.id.ssafe_action_open_doc -> {
+            openPdfLauncher.launch(arrayOf("application/pdf"))
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
+    }
+}
 
 
   override fun onStart() {
