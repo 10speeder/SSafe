@@ -91,6 +91,22 @@ const val OPENING_ZIM_FILE_DELAY = 300L
 const val GET_CONTENT_SHORTCUT_ID = "get_content_shortcut"
 
 class KiwixMainActivity : CoreMainActivity() {
+  private val openPdfLauncher =
+    registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri ?: return@registerForActivityResult
+        contentResolver.takePersistableUriPermission(
+            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+        val mime = contentResolver.getType(uri) ?: ""
+        val path = uri.lastPathSegment?.lowercase() ?: ""
+        if (mime == "application/pdf" || path.endsWith(".pdf")) {
+            startActivity(
+                Intent(this, org.kiwix.kiwixmobile.reader.PdfReaderActivity::class.java).setData(uri)
+            )
+        } else {
+            Toast.makeText(this, "Pick a PDF file", Toast.LENGTH_SHORT).show()
+        }
+    }
   private var actionMode: ActionMode? = null
   override val cachedComponent by lazy { kiwixActivityComponent }
   override val searchFragmentRoute: String = KiwixDestination.Search.route
