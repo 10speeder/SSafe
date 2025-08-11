@@ -19,6 +19,24 @@
     android:icon="@mipmap/ic_launcher"
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true">
+    <!-- Local Docs screen -->
+<activity
+    android:name=".localdocs.LocalDocsActivity"
+    android:exported="true"
+    android:label="Local Docs (Dev)" />
+
+<!-- Temporary launcher icon to open Local Docs directly -->
+<activity-alias
+    android:name=".LocalDocsLauncher"
+    android:exported="true"
+    android:targetActivity=".localdocs.LocalDocsActivity"
+    android:icon="@mipmap/ic_launcher"
+    android:label="Local Docs (Dev)">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity-alias>
     <activity
       android:name=".main.KiwixMainActivity"
       android:configChanges="orientation|keyboardHidden|screenSize"
