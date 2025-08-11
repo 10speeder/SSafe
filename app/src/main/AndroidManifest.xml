@@ -23,7 +23,12 @@
 <activity
     android:name=".localdocs.LocalDocsActivity"
     android:exported="true"
-    android:label="Local Docs (Dev)" />
+    android:label="Local Docs (Dev)">
+    <intent-filter>
+        <action android:name="org.kiwix.action.LOCAL_DOCS"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter>
+</activity>
 
 <!-- Temporary launcher icon to open Local Docs directly -->
 <activity-alias
