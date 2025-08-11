@@ -17,7 +17,10 @@
  */
 
 package org.kiwix.kiwixmobile.main
-
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import android.view.MenuInflater
+import androidx.lifecycle.Lifecycle
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
@@ -90,6 +93,7 @@ const val OPENING_ZIM_FILE_DELAY = 300L
 const val GET_CONTENT_SHORTCUT_ID = "get_content_shortcut"
 
 class KiwixMainActivity : CoreMainActivity() {
+  private val MENU_OPEN_DOC_ID = 0x53534601 // unique ID for our menu item
   private val openPdfLauncher =
     registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri ?: return@registerForActivityResult
@@ -144,6 +148,24 @@ class KiwixMainActivity : CoreMainActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     cachedComponent.inject(this)
     super.onCreate(savedInstanceState)
+    val menuHost: MenuHost = this
+menuHost.addMenuProvider(object : MenuProvider {
+    override fun onCreateMenu(menu: android.view.Menu, menuInflater: MenuInflater) {
+        val item = menu.add(0, MENU_OPEN_DOC_ID, 0, "Open")
+        item.setIcon(android.R.drawable.ic_menu_upload)
+        item.setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
+    }
+
+    override fun onMenuItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            MENU_OPEN_DOC_ID -> {
+                openPdfLauncher.launch(arrayOf("application/pdf"))
+                true
+            }
+            else -> false
+        }
+    }
+}, this, Lifecycle.State.RESUMED)
     setContent {
       val pendingIntent by pendingIntentFlow.collectAsState()
       navController = rememberNavController()
@@ -246,21 +268,6 @@ class KiwixMainActivity : CoreMainActivity() {
     leftDrawerMenu.clear()
     leftDrawerMenu.addAll(leftNavigationDrawerMenuItems)
   }
-  override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    val handled = super.onCreateOptionsMenu(menu)
-    menuInflater.inflate(R.menu.menu_ssafe_open_document, menu)
-    return true
-}
-override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    return when (item.itemId) {
-        R.id.ssafe_action_open_doc -> {
-            openPdfLauncher.launch(arrayOf("application/pdf"))
-            true
-        }
-        else -> super.onOptionsItemSelected(item)
-    }
-}
-
 
   override fun onStart() {
     super.onStart()
