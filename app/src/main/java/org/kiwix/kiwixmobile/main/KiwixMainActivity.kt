@@ -18,7 +18,6 @@
 
 package org.kiwix.kiwixmobile.main
 
-import android.content.Intent
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
@@ -95,13 +94,14 @@ class KiwixMainActivity : CoreMainActivity() {
     registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri ?: return@registerForActivityResult
         contentResolver.takePersistableUriPermission(
-            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+
         )
         val mime = contentResolver.getType(uri) ?: ""
         val path = uri.lastPathSegment?.lowercase() ?: ""
         if (mime == "application/pdf" || path.endsWith(".pdf")) {
             startActivity(
-                Intent(this, org.kiwix.kiwixmobile.reader.PdfReaderActivity::class.java).setData(uri)
+                android.content.Intent(this, org.kiwix.kiwixmobile.reader.PdfReaderActivity::class.java).setData(uri)
             )
         } else {
             Toast.makeText(this, "Pick a PDF file", Toast.LENGTH_SHORT).show()
