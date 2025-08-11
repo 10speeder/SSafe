@@ -379,13 +379,15 @@ menuHost.addMenuProvider(object : MenuProvider {
     testingTag = LEFT_DRAWER_HELP_ITEM_TESTING_TAG
   )
 
-  override val supportDrawerMenuItem: DrawerMenuItem? = DrawerMenuItem(
-    title = CoreApp.instance.getString(string.menu_support_kiwix),
-    iconRes = drawable.ic_support_24px,
+override val supportDrawerMenuItem: DrawerMenuItem? = DrawerMenuItem(
+    title = "Local Docs",
+    iconRes = drawable.ic_support_24px, // reuse existing icon for now
     visible = true,
-    onClick = { openSupportKiwixExternalLink() },
-    testingTag = LEFT_DRAWER_SUPPORT_ITEM_TESTING_TAG
-  )
+    onClick = {
+        startActivity(android.content.Intent("org.kiwix.action.LOCAL_DOCS"))
+    },
+)
+
 
   /**
    * In kiwix app we are not showing the "About app" item so returning null.
