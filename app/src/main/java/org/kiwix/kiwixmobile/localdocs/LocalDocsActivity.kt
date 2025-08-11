@@ -19,15 +19,23 @@ class LocalDocsActivity : AppCompatActivity() {
     private lateinit var btnChoose: Button
     private lateinit var btnUp: Button
     private lateinit var btnStorage: Button
+    private lateinit var btnSearch: Button
+    private lateinit var btnSetHome: Button
+    private lateinit var etSearch: EditText
 
     private val prefs: SharedPreferences by lazy {
         getSharedPreferences("ssafe_prefs", Context.MODE_PRIVATE)
     }
 
     private var rootTreeUri: Uri? = null
+    private var homeTreeUri: Uri? = null
     private var currentDir: DocumentFile? = null
     private val stack = ArrayDeque<DocumentFile>()
     private var currentChildren: List<DocumentFile> = emptyList()
+
+    // search state
+    private var showingSearch: Boolean = false
+    private var lastQuery: String = ""
 
     // Storage volume handling
     private var storageRoots: List<File> = emptyList()
@@ -46,6 +54,7 @@ class LocalDocsActivity : AppCompatActivity() {
                 }
                 prefs.edit().putString(KEY_TREE_URI, uri.toString()).apply()
                 rootTreeUri = uri
+                showingSearch = false
                 openRoot()
             } else {
                 Toast.makeText(this, "No folder selected", Toast.LENGTH_SHORT).show()
@@ -70,14 +79,20 @@ class LocalDocsActivity : AppCompatActivity() {
         btnChoose = findViewById(R.id.btnChoose)
         btnUp = findViewById(R.id.btnUp)
         btnStorage = findViewById(R.id.btnStorage)
+        btnSearch = findViewById(R.id.btnSearch)
+        btnSetHome = findViewById(R.id.btnSetHome)
+        etSearch = findViewById(R.id.etSearch)
 
         btnChoose.setOnClickListener { chooseFolder() }
-        btnUp.setOnClickListener { goUp() }
-        btnStorage.setOnClickListener { switchStorage() }
+        btnUp.setOnClickListener { showingSearch = false; goUp() }
+        btnStorage.setOnClickListener { showingSearch = false; switchStorage() }
+        btnSetHome.setOnClickListener { setHomeToCurrent() }
+        btnSearch.setOnClickListener { startSearch() }
 
         listView.setOnItemClickListener { _, _, position, _ ->
             val item = currentChildren.getOrNull(position) ?: return@setOnItemClickListener
             if (item.isDirectory) {
+                showingSearch = false
                 enterDir(item)
             } else {
                 openFile(item)
@@ -89,6 +104,10 @@ class LocalDocsActivity : AppCompatActivity() {
 
         val saved = prefs.getString(KEY_TREE_URI, null)
         rootTreeUri = saved?.let { Uri.parse(it) }
+
+        val savedHome = prefs.getString(KEY_HOME_URI, null)
+        homeTreeUri = savedHome?.let { Uri.parse(it) }
+
         if (rootTreeUri == null) {
             txtPath.text = "(no folder selected) Tap 'Choose folder' or 'Storage' to switch volumes."
         } else {
@@ -104,9 +123,7 @@ class LocalDocsActivity : AppCompatActivity() {
             try {
                 openTreeLauncher.launch(null)
                 return
-            } catch (_: Exception) {
-                // fall through
-            }
+            } catch (_: Exception) { /* fall through */ }
         }
         storagePermLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     }
@@ -144,11 +161,12 @@ class LocalDocsActivity : AppCompatActivity() {
 
     /** Legacy open starting at first detected storage root (usually internal). */
     private fun openLegacyRoot() {
-        if (storageRoots.isEmpty()) {
+        val roots = storageRoots
+        if (roots.isEmpty()) {
             Toast.makeText(this, "Storage not accessible", Toast.LENGTH_LONG).show()
             return
         }
-        val target = storageRoots[0]
+        val target = roots[0]
         rootTreeUri = Uri.fromFile(target)
         openRoot()
     }
@@ -183,24 +201,22 @@ class LocalDocsActivity : AppCompatActivity() {
 
     private fun refreshList() {
         val dir = currentDir ?: return
-        txtPath.text = dir.name ?: (dir.uri.lastPathSegment ?: dir.uri.toString())
-
-        val children = dir.listFiles().toList()
-        val allowed = children.filter { it.isDirectory || isSupportedFile(it) }
-
-        val (folders, files) = allowed.partition { it.isDirectory }
-        val sorted = folders.sortedBy { it.name?.lowercase() ?: "" } +
-                files.sortedBy { it.name?.lowercase() ?: "" }
-
-        currentChildren = sorted
-
-        val names = sorted.map {
-            val n = it.name ?: "(unnamed)"
-            if (it.isDirectory) "📁  $n" else "📄  $n"
+        if (!showingSearch) {
+            txtPath.text = dir.name ?: (dir.uri.lastPathSegment ?: dir.uri.toString())
+            val children = dir.listFiles().toList()
+            val allowed = children.filter { it.isDirectory || isSupportedFile(it) }
+            val (folders, files) = allowed.partition { it.isDirectory }
+            val sorted = folders.sortedBy { it.name?.lowercase() ?: "" } +
+                    files.sortedBy { it.name?.lowercase() ?: "" }
+            currentChildren = sorted
+            val names = sorted.map {
+                val n = it.name ?: "(unnamed)"
+                if (it.isDirectory) "📁  $n" else "📄  $n"
+            }
+            listView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, names)
+        } else {
+            // search mode list already set by startSearch()
         }
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, names)
-        listView.adapter = adapter
     }
 
     private fun isSupportedFile(f: DocumentFile): Boolean {
@@ -231,7 +247,81 @@ class LocalDocsActivity : AppCompatActivity() {
         }
     }
 
+    /** Set Home = current directory (or root if current is null). */
+    private fun setHomeToCurrent() {
+        val uri = (currentDir?.uri ?: rootTreeUri)
+        if (uri == null) {
+            Toast.makeText(this, "Open a folder first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        homeTreeUri = uri
+        prefs.edit().putString(KEY_HOME_URI, uri.toString()).apply()
+        Toast.makeText(this, "Home set", Toast.LENGTH_SHORT).show()
+    }
+
+    /** Start a filename search within Home (or Root if Home not set). */
+    private fun startSearch() {
+        val q = etSearch.text.toString().trim().lowercase()
+        if (q.isEmpty()) {
+            showingSearch = false
+            refreshList()
+            return
+        }
+        val start = resolveToDoc(homeTreeUri ?: rootTreeUri)
+        if (start == null) {
+            Toast.makeText(this, "Pick a folder first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "Searching…", Toast.LENGTH_SHORT).show()
+        lastQuery = q
+        Thread {
+            val results = mutableListOf<DocumentFile>()
+            try {
+                searchDocuments(start, q, results, 1000)
+            } catch (_: Throwable) { /* ignore */ }
+
+            runOnUiThread {
+                showingSearch = true
+                currentChildren = results
+                txtPath.text = "Search: \"$q\" (${results.size})"
+                val names = results.map { "🔎  " + (it.name ?: "(unnamed)") }
+                listView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, names)
+                if (results.isEmpty()) {
+                    Toast.makeText(this, "No matches", Toast.LENGTH_LONG).show()
+                } else if (results.size >= 1000) {
+                    Toast.makeText(this, "Showing first 1000 results", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun searchDocuments(root: DocumentFile, q: String, out: MutableList<DocumentFile>, limit: Int) {
+        if (out.size >= limit) return
+        val kids = root.listFiles()
+        for (c in kids) {
+            if (out.size >= limit) return
+            if (c.isDirectory) {
+                searchDocuments(c, q, out, limit)
+            } else {
+                val name = c.name?.lowercase() ?: continue
+                if (isSupportedFile(c) && name.contains(q)) {
+                    out.add(c)
+                }
+            }
+        }
+    }
+
+    private fun resolveToDoc(uri: Uri?): DocumentFile? {
+        return when (uri?.scheme) {
+            "content" -> DocumentFile.fromTreeUri(this, uri)
+            "file" -> DocumentFile.fromFile(File(uri.path!!))
+            else -> null
+        }
+    }
+
     companion object {
         private const val KEY_TREE_URI = "tree_uri"
+        private const val KEY_HOME_URI = "home_uri"
     }
 }
