@@ -29,10 +29,13 @@ class LocalDocsActivity : AppCompatActivity() {
     private val openTreeLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
             if (uri != null) {
-                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                try {
-                    contentResolver.takePersistableUriPermission(uri, flags)
-                } catch (_: Exception) { /* ignore if already granted */ }
+                val flags: Int =
+    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+    android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+try {
+    contentResolver.takePersistableUriPermission(uri, flags)
+} catch (_: Exception) { /* ignore if already granted */ }
+
                 prefs.edit().putString(KEY_TREE_URI, uri.toString()).apply()
                 rootTreeUri = uri
                 openRoot()
