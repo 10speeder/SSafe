@@ -18,6 +18,7 @@ class LocalDocsActivity : AppCompatActivity() {
     private lateinit var txtPath: TextView
     private lateinit var btnChoose: Button
     private lateinit var btnUp: Button
+    private lateinit var btnStorage: Button
 
     private val prefs: SharedPreferences by lazy {
         getSharedPreferences("ssafe_prefs", Context.MODE_PRIVATE)
@@ -27,6 +28,10 @@ class LocalDocsActivity : AppCompatActivity() {
     private var currentDir: DocumentFile? = null
     private val stack = ArrayDeque<DocumentFile>()
     private var currentChildren: List<DocumentFile> = emptyList()
+
+    // Storage volume handling
+    private var storageRoots: List<File> = emptyList()
+    private var storageIndex: Int = 0
 
     private val openTreeLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
@@ -50,7 +55,7 @@ class LocalDocsActivity : AppCompatActivity() {
     private val storagePermLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
-                openLegacyRoot()
+                openLegacyRoot() // open first storage root (internal)
             } else {
                 Toast.makeText(this, "Storage permission denied", Toast.LENGTH_LONG).show()
             }
@@ -64,9 +69,11 @@ class LocalDocsActivity : AppCompatActivity() {
         txtPath = findViewById(R.id.txtPath)
         btnChoose = findViewById(R.id.btnChoose)
         btnUp = findViewById(R.id.btnUp)
+        btnStorage = findViewById(R.id.btnStorage)
 
         btnChoose.setOnClickListener { chooseFolder() }
         btnUp.setOnClickListener { goUp() }
+        btnStorage.setOnClickListener { switchStorage() }
 
         listView.setOnItemClickListener { _, _, position, _ ->
             val item = currentChildren.getOrNull(position) ?: return@setOnItemClickListener
@@ -77,17 +84,20 @@ class LocalDocsActivity : AppCompatActivity() {
             }
         }
 
+        // Detect volumes (internal + SD card[s])
+        storageRoots = detectStorageRoots()
+
         val saved = prefs.getString(KEY_TREE_URI, null)
         rootTreeUri = saved?.let { Uri.parse(it) }
         if (rootTreeUri == null) {
-            txtPath.text = "(no folder selected) Tap 'Choose folder' to pick one."
+            txtPath.text = "(no folder selected) Tap 'Choose folder' or 'Storage' to switch volumes."
         } else {
             openRoot()
         }
     }
 
+    /** Try system picker; if unavailable, request legacy permission and open internal storage. */
     private fun chooseFolder() {
-        // Try system folder picker first
         val treeIntent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE)
         val canPickTree = treeIntent.resolveActivity(packageManager) != null
         if (canPickTree) {
@@ -95,21 +105,52 @@ class LocalDocsActivity : AppCompatActivity() {
                 openTreeLauncher.launch(null)
                 return
             } catch (_: Exception) {
-                // fall through to legacy
+                // fall through
             }
         }
-        // Legacy fallback: request permission, then browse /sdcard
         storagePermLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     }
 
-    private fun openLegacyRoot() {
-        val rootFile = android.os.Environment.getExternalStorageDirectory()
-        if (rootFile != null && rootFile.exists()) {
-            rootTreeUri = Uri.fromFile(rootFile)
-            openRoot()
-        } else {
-            Toast.makeText(this, "Storage not accessible", Toast.LENGTH_LONG).show()
+    /** Build list of top-level storage roots for this device. */
+    private fun detectStorageRoots(): List<File> {
+        val dirs = getExternalFilesDirs(null).filterNotNull()
+        val roots = mutableListOf<File>()
+        for (appDir in dirs) {
+            val path = appDir.absolutePath
+            // Typical: /storage/emulated/0/Android/data/<pkg>/files  OR  /storage/XXXX-XXXX/Android/data/<pkg>/files
+            val idx = path.indexOf("/Android/")
+            val rootPath = if (idx > 0) path.substring(0, idx) else path
+            val f = File(rootPath)
+            if (f.exists() && f.isDirectory && roots.none { it.absolutePath == f.absolutePath }) {
+                roots.add(f)
+            }
         }
+        return roots
+    }
+
+    /** Switch between Internal and SD (and any other) roots. */
+    private fun switchStorage() {
+        if (storageRoots.isEmpty()) {
+            Toast.makeText(this, "No storage volumes found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        storageIndex = (storageIndex + 1) % storageRoots.size
+        val target = storageRoots[storageIndex]
+        rootTreeUri = Uri.fromFile(target)
+        stack.clear()
+        openRoot()
+        Toast.makeText(this, "Storage: ${target.absolutePath}", Toast.LENGTH_SHORT).show()
+    }
+
+    /** Legacy open starting at first detected storage root (usually internal). */
+    private fun openLegacyRoot() {
+        if (storageRoots.isEmpty()) {
+            Toast.makeText(this, "Storage not accessible", Toast.LENGTH_LONG).show()
+            return
+        }
+        val target = storageRoots[0]
+        rootTreeUri = Uri.fromFile(target)
+        openRoot()
     }
 
     private fun openRoot() {
@@ -183,11 +224,6 @@ class LocalDocsActivity : AppCompatActivity() {
             }
             n.endsWith(".epub") -> {
                 Toast.makeText(this, "EPUB reader coming next ✨", Toast.LENGTH_SHORT).show()
-                // When ready:
-                // val intent = android.content.Intent(this, org.kiwix.kiwixmobile.reader.EpubReaderActivity::class.java)
-                // intent.setData(f.uri)
-                // intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                // startActivity(intent)
             }
             else -> {
                 Toast.makeText(this, "Unsupported file", Toast.LENGTH_SHORT).show()
