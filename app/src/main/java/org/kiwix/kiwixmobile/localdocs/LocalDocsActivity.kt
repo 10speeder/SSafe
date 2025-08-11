@@ -65,13 +65,15 @@ try {
             }
         }
 
-        val saved = prefs.getString(KEY_TREE_URI, null)
-        rootTreeUri = saved?.let { Uri.parse(it) }
-        if (rootTreeUri == null) {
-            chooseFolder()
-        } else {
-            openRoot()
-        }
+       val saved = prefs.getString(KEY_TREE_URI, null)
+rootTreeUri = saved?.let { Uri.parse(it) }
+if (rootTreeUri == null) {
+    txtPath.text = "(no folder selected) Tap 'Choose folder' to pick one."
+    // Don't auto-launch here — older Android can crash if we launch before STARTED
+} else {
+    openRoot()
+}
+
     }
 
     private fun chooseFolder() {
