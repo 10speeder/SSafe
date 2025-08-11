@@ -1,46 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:padding="12dp">
-<LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp">
 
-    <Button
-        android:id="@+id/btnChoose"
-        android:layout_width="0dp"
+    <!-- Row 1: Folder controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Choose folder" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btnUp"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Up" />
+        <Button
+            android:id="@+id/btnChoose"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Choose folder" />
 
-    <Button
-        android:id="@+id/btnStorage"
-        android:layout_width="0dp"
+        <Button
+            android:id="@+id/btnUp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Up" />
+
+        <Button
+            android:id="@+id/btnStorage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Storage" />
+    </LinearLayout>
+
+    <!-- Row 2: Search + Home -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Storage" />
-</LinearLayout>
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:singleLine="true"
+            android:hint="Search name (e.g., manual or .pdf)" />
+
+        <Button
+            android:id="@+id/btnSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Search" />
+
+        <Button
+            android:id="@+id/btnSetHome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Set Home" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/txtPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="(no folder selected)"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
+        android:text="(path)"
+        android:layout_marginTop="8dp" />
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:dividerHeight="1dp"/>
+        android:layout_weight="1" />
+
 </LinearLayout>
