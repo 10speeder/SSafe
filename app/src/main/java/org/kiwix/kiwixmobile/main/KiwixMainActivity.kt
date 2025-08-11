@@ -381,8 +381,9 @@ menuHost.addMenuProvider(object : MenuProvider {
 
 override val supportDrawerMenuItem: DrawerMenuItem? = DrawerMenuItem(
     title = "Local Docs",
-    iconRes = drawable.ic_support_24px, // reuse existing icon for now
+    iconRes = drawable.ic_support_24px, // reuse an existing icon for now
     visible = true,
+    testingTag = "menu_local_docs",
     onClick = {
         startActivity(android.content.Intent("org.kiwix.action.LOCAL_DOCS"))
     },
