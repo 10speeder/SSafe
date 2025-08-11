@@ -20,7 +20,6 @@ package org.kiwix.kiwixmobile.main
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import android.view.MenuInflater
-import androidx.lifecycle.Lifecycle
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
@@ -165,7 +164,7 @@ menuHost.addMenuProvider(object : MenuProvider {
             else -> false
         }
     }
-}, this, Lifecycle.State.RESUMED)
+}, this, androidx.lifecycle.Lifecycle.State.RESUMED)
     setContent {
       val pendingIntent by pendingIntentFlow.collectAsState()
       navController = rememberNavController()
