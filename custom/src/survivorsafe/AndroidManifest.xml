@@ -1,6 +1,30 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
   <application
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
-      android:roundIcon="@mipmap/ic_launcher_round" />
+      android:roundIcon="@mipmap/ic_launcher_round"
+      tools:replace="label,icon,roundIcon">
+
+    <!-- Make Local Docs the launcher -->
+    <activity
+        android:name="org.kiwix.kiwixmobile.localdocs.LocalDocsActivity"
+        android:exported="true"
+        android:label="@string/app_name">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+    <!-- Remove default Kiwix launcher entry so you don't get two icons -->
+    <activity
+        android:name="org.kiwix.kiwixmobile.main.KiwixMainActivity"
+        tools:node="merge">
+      <intent-filter tools:node="removeAll" />
+    </activity>
+
+  </application>
 </manifest>
