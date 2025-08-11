@@ -2,14 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp">
+    android:orientation="vertical">
 
-    <!-- Row 1: Folder controls -->
+    <!-- App bar with overflow menu -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:title="Local Docs" />
+
+    <!-- Row: core folder controls -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="12dp">
 
         <Button
             android:id="@+id/btnChoose"
@@ -33,42 +42,13 @@
             android:text="Storage" />
     </LinearLayout>
 
-    <!-- Row 2: Search + Home -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-
-        <EditText
-            android:id="@+id/etSearch"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:singleLine="true"
-            android:hint="Search name (e.g., manual or .pdf)" />
-
-        <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Search" />
-
-        <Button
-            android:id="@+id/btnSetHome"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Set Home" />
-    </LinearLayout>
-
     <TextView
         android:id="@+id/txtPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="(path)"
-        android:layout_marginTop="8dp" />
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="(path)" />
 
     <ListView
         android:id="@+id/listView"
