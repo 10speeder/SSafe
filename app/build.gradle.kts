@@ -151,6 +151,7 @@ dependencies {
   testImplementation(Libs.TURBINE_FLOW_TEST)
 // PDF (Apache-2.0)
   implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.3")
+  implementation("androidx.documentfile:documentfile:1.0.1")
 
 }
 tasks.register("generateVersionCodeAndName") {
