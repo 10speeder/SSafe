@@ -1,0 +1,33 @@
+name: Build Survivor Safe (survivorsafeDebug)
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: survivorsafe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build APK (survivorsafeDebug)
+        run: ./gradlew --no-daemon :custom:clean :custom:assembleSurvivorsafeDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: survivorsafe-apk
+          path: custom/build/outputs/apk/survivorsafe/debug/*.apk
