@@ -75,23 +75,61 @@ if (rootTreeUri == null) {
 }
 
     }
-
-    private fun chooseFolder() {
-        openTreeLauncher.launch(null)
-    }
-
-    private fun openRoot() {
-        val uri = rootTreeUri ?: return
-        val root = DocumentFile.fromTreeUri(this, uri)
-        if (root == null) {
-            Toast.makeText(this, "Folder not accessible. Choose again.", Toast.LENGTH_LONG).show()
-            chooseFolder()
-            return
+private val storagePermLauncher =
+    registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            openLegacyRoot()
+        } else {
+            Toast.makeText(this, "Storage permission denied", Toast.LENGTH_LONG).show()
         }
-        stack.clear()
-        currentDir = root
-        refreshList()
     }
+
+private fun openLegacyRoot() {
+    // Start at primary external storage (e.g., /sdcard)
+    val rootFile = android.os.Environment.getExternalStorageDirectory()
+    if (rootFile != null && rootFile.exists()) {
+        rootTreeUri = android.net.Uri.fromFile(rootFile)
+        openRoot()
+    } else {
+        Toast.makeText(this, "Storage not accessible", Toast.LENGTH_LONG).show()
+    }
+}
+
+   private fun chooseFolder() {
+    // Try the system folder picker first
+    val treeIntent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE)
+    val canPickTree = treeIntent.resolveActivity(packageManager) != null
+
+    if (canPickTree) {
+        try {
+            openTreeLauncher.launch(null)
+            return
+        } catch (_: Exception) {
+            // fall through to legacy
+        }
+    }
+
+    // Legacy fallback: ask for storage permission and browse /sdcard
+    storagePermLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+}
+
+
+   private fun openRoot() {
+    val uri = rootTreeUri ?: return
+    val root = when (uri.scheme) {
+        "content" -> androidx.documentfile.provider.DocumentFile.fromTreeUri(this, uri)
+        "file" -> androidx.documentfile.provider.DocumentFile.fromFile(java.io.File(uri.path!!))
+        else -> null
+    }
+    if (root == null) {
+        Toast.makeText(this, "Folder not accessible. Choose again.", Toast.LENGTH_LONG).show()
+        return
+    }
+    stack.clear()
+    currentDir = root
+    refreshList()
+}
+
 
     private fun enterDir(dir: DocumentFile) {
         stack.addLast(currentDir!!)
@@ -132,28 +170,18 @@ if (rootTreeUri == null) {
         return n.endsWith(".pdf") || n.endsWith(".epub")
     }
 
-    private fun openFile(f: DocumentFile) {
-        val n = f.name?.lowercase() ?: ""
-        when {
-            n.endsWith(".pdf") -> {
-                startActivity(
-                    android.content.Intent(this, org.kiwix.kiwixmobile.reader.PdfReaderActivity::class.java)
-                        .setData(f.uri)
-                        .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                )
-            }
-            n.endsWith(".epub") -> {
-                Toast.makeText(this, "EPUB reader coming next ✨", Toast.LENGTH_SHORT).show()
-                // After we add Readium, we'll open EpubReaderActivity here.
-                // startActivity(android.content.Intent(this, org.kiwix.kiwixmobile.reader.EpubReaderActivity::class.java)
-                //     .setData(f.uri)
-                //     .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION))
-            }
-            else -> {
-                Toast.makeText(this, "Unsupported file", Toast.LENGTH_SHORT).show()
-            }
-        }
+    n.endsWith(".pdf") -> {
+    val intent = android.content.Intent(this, org.kiwix.kiwixmobile.reader.PdfReaderActivity::class.java)
+    if (f.uri.scheme == "file") {
+        // Some devices give file:// for legacy — that’s fine
+        intent.setData(f.uri)
+    } else {
+        intent.setData(f.uri)
+        intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
+    startActivity(intent)
+}
+
 
     companion object {
         private const val KEY_TREE_URI = "tree_uri"
